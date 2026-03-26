@@ -1,121 +1,298 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [documentos, setDocumentos] = useState([]);
+  const [pagina, setPagina] = useState(1);
+  const [totalPaginas, setTotalPaginas] = useState(0);
+  const [totalDocs, setTotalDocs] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [busca, setBusca] = useState("");
+  const [docSelecionado, setDocSelecionado] = useState(null);
+
+  const carregarDados = async (numPagina, termoBusca = "") => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`http://localhost:5000/api/documentos`, {
+        params: { page: numPagina, limit: 10, campo_busca: termoBusca },
+      });
+      setDocumentos(response.data.data);
+      setTotalPaginas(response.data.pages);
+      setTotalDocs(response.data.total);
+      setPagina(response.data.page);
+      if (response.data.data.length > 0)
+        setDocSelecionado(response.data.data[0]);
+    } catch (error) {
+      console.error("Erro ao carregar:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    carregarDados(pagina, busca);
+  }, [pagina]);
+
+  const handleBusca = (e) => {
+    e.preventDefault();
+    setPagina(1);
+    carregarDados(1, busca);
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+    <div
+      style={{
+        position: "fixed", // Força o app a "colar" nas bordas da tela
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        margin: 0,
+        padding: 0,
+        backgroundColor: "#f4f4f4",
+        fontFamily: "sans-serif",
+        boxSizing: "border-box",
+      }}
+    >
+      {/* 1. CABEÇALHO - AGORA COM ALTURA FIXA E COR DE DESTAQUE */}
+      <header
+        style={{
+          height: "80px", // Altura fixa para garantir visibilidade
+          backgroundColor: "#2c3e50",
+          color: "white",
+          padding: "10px 20px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+          flexShrink: 0,
+          zIndex: 100,
+        }}
+      >
+        <h2 style={{ margin: 0, fontSize: "16px", color: "white" }}>
+          Pesquisa Escala 6x1 | {totalDocs} registros
+        </h2>
+        <form
+          onSubmit={handleBusca}
+          style={{ marginTop: "5px", display: "flex", gap: "5px" }}
         >
-          Count is {count}
+          <input
+            type="text"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar termo..."
+            style={{
+              fontSize: "12px",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              border: "none",
+              width: "250px",
+            }}
+          />
+          <button
+            type="submit"
+            style={{
+              fontSize: "12px",
+              padding: "4px 10px",
+              cursor: "pointer",
+              borderRadius: "4px",
+              border: "none",
+              backgroundColor: "#3498db",
+              color: "white",
+            }}
+          >
+            Buscar
+          </button>
+        </form>
+      </header>
+
+      {/* 2. ÁREA DE CONTEÚDO */}
+      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        {/* LISTA LATERAL */}
+        <aside
+          style={{
+            width: "280px",
+            backgroundColor: "#fff",
+            borderRight: "1px solid #ddd",
+            overflowY: "auto",
+            flexShrink: 0,
+          }}
+        >
+          {loading ? (
+            <p style={{ padding: "10px" }}>Carregando...</p>
+          ) : (
+            documentos.map((doc) => (
+              <div
+                key={doc._id}
+                onClick={() => setDocSelecionado(doc)}
+                style={{
+                  padding: "10px",
+                  borderBottom: "1px solid #eee",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  backgroundColor:
+                    docSelecionado?._id === doc._id ? "#e1f5fe" : "transparent",
+                }}
+              >
+                <strong>{doc.titulo || "Sem Título"}</strong>
+                <div style={{ fontSize: "10px", color: "#999" }}>
+                  ID: {doc._id}
+                </div>
+              </div>
+            ))
+          )}
+        </aside>
+
+        {/* VISUALIZAÇÃO DO POST */}
+        <main
+          style={{
+            flex: 1,
+            padding: "20px",
+            overflowY: "auto",
+            backgroundColor: "#fff",
+          }}
+        >
+          {docSelecionado ? (
+            <div style={{ textAlign: "left", maxWidth: "800px" }}>
+              {/* CABEÇALHO DO POST - Informações extraídas */}
+              <section
+                style={{
+                  marginBottom: "20px",
+                  padding: "15px",
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "8px",
+                  border: "1px solid #e9ecef",
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: "18px",
+                    margin: "0 0 10px 0",
+                    color: "#2c3e50",
+                  }}
+                >
+                  {docSelecionado.titulo || "Título não disponível"}
+                </h3>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "10px",
+                    fontSize: "12px",
+                  }}
+                >
+                  <div>
+                    <strong>Autor:</strong>{" "}
+                    {docSelecionado.autor || "Não identificado"}
+                  </div>
+                  <div>
+                    <strong>Data:</strong>{" "}
+                    {docSelecionado.data_postagem || "N/A"}
+                  </div>
+                  <div>
+                    <strong>Link original:</strong>{" "}
+                    <a
+                      href={docSelecionado.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: "#3498db" }}
+                    >
+                      Ver no LinkedIn
+                    </a>
+                  </div>
+                  <div>
+                    <strong>ID do Banco:</strong>{" "}
+                    <span style={{ color: "#999" }}>{docSelecionado._id}</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* TEXTO PROCESSADO - Se você tiver um campo de texto limpo */}
+              {docSelecionado.texto_limpo && (
+                <section style={{ marginBottom: "20px" }}>
+                  <h4 style={{ fontSize: "14px", color: "#555" }}>
+                    Texto Extraído (Para análise):
+                  </h4>
+                  <div
+                    style={{
+                      fontSize: "14px",
+                      whiteSpace: "pre-wrap",
+                      backgroundColor: "#fff",
+                      padding: "15px",
+                      borderLeft: "4px solid #3498db",
+                    }}
+                  >
+                    {docSelecionado.texto_limpo}
+                  </div>
+                </section>
+              )}
+
+              {/* PÁGINA BRUTA - O "print" original do post */}
+              <section>
+                <h4 style={{ fontSize: "14px", color: "#555" }}>
+                  Visualização Original (HTML):
+                </h4>
+                <div
+                  style={{
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    padding: "10px",
+                    zoom: "0.8", // Diminui um pouco o tamanho do HTML original para caber melhor
+                  }}
+                >
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: docSelecionado.pagina_bruta,
+                    }}
+                  />
+                </div>
+              </section>
+            </div>
+          ) : (
+            <div
+              style={{ textAlign: "center", marginTop: "100px", color: "#ccc" }}
+            >
+              Selecione um registro para iniciar a análise detalhada.
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* 3. RODAPÉ */}
+      <footer
+        style={{
+          height: "50px",
+          backgroundColor: "#fff",
+          borderTop: "1px solid #ddd",
+          display: "flex",
+          alignItems: "center",
+          padding: "0 20px",
+          flexShrink: 0,
+        }}
+      >
+        <button
+          disabled={pagina === 1}
+          onClick={() => setPagina(pagina - 1)}
+          style={{ fontSize: "12px", padding: "5px 10px" }}
+        >
+          Anterior
         </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        <span style={{ margin: "0 15px", fontSize: "12px" }}>
+          Página {pagina} de {totalPaginas}
+        </span>
+        <button
+          disabled={pagina === totalPaginas}
+          onClick={() => setPagina(pagina + 1)}
+          style={{ fontSize: "12px", padding: "5px 10px" }}
+        >
+          Próxima
+        </button>
+      </footer>
+    </div>
+  );
 }
 
-export default App
+export default App;

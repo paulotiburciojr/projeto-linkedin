@@ -11,7 +11,19 @@ app.use(express.json());
 //  useNewUrlParser: true,
 //  useUnifiedTopology: true,
 //});
-mongoose.connect("mongodb://localhost:27017/linkedin");
+require("dotenv").config();
+//mongoose.connect(process.env.MONGO_URI);
+const uri = process.env.MONGO_URI;
+console.log("uri: ", uri);
+
+mongoose
+  .connect(uri)
+  .then(() =>
+    console.log("Conectado ao Atlas! Agora os dados estão na nuvem ☁️"),
+  )
+  .catch((err) => console.error("Erro ao conectar:", err));
+
+//mongoose.connect("mongodb://localhost:27017/linkedin");
 
 const DocSchema = new mongoose.Schema(
   {
