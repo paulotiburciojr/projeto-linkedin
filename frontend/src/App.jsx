@@ -155,7 +155,7 @@ function App() {
           }}
         >
           {docSelecionado ? (
-            <div style={{ textAlign: "left", maxWidth: "800px" }}>
+            <div style={{ textAlign: "left", maxWidth: "950px" }}>
               {/* CABEÇALHO DO POST - Informações extraídas */}
               <section
                 style={{
