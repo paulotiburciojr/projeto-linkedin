@@ -9,12 +9,20 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [busca, setBusca] = useState("");
   const [docSelecionado, setDocSelecionado] = useState(null);
+  const [tiposSelecionados, setTiposSelecionados] = useState([]);
+  const opcoesTipo = ["in", "posts", "new", "company", "jobs"];
 
   const carregarDados = async (numPagina, termoBusca = "") => {
     setLoading(true);
     try {
       const response = await axios.get(`http://localhost:5000/api/documentos`, {
-        params: { page: numPagina, limit: 10, campo_busca: termoBusca },
+        params: {
+          page: numPagina,
+          limit: 10,
+          campo_busca: termoBusca,
+          // Enviamos o array de tipos. O Axios transforma isso em tipo_post[]=in&tipo_post[]=posts
+          tipo_post: tiposSelecionados,
+        },
       });
       setDocumentos(response.data.data);
       setTotalPaginas(response.data.pages);
@@ -207,6 +215,62 @@ function App() {
                     <strong>ID do Banco:</strong>{" "}
                     <span style={{ color: "#999" }}>{docSelecionado._id}</span>
                   </div>
+                  <div>
+                    <strong>Tipo de postagem:</strong>{" "}
+                    <span style={{ color: "#999" }}>
+                      {docSelecionado.tipo_post}
+                    </span>
+                  </div>
+                </div>
+              </section>
+
+              <section
+                style={{
+                  marginBottom: "20px",
+                  padding: "12px",
+                  backgroundColor: "#fff",
+                  border: "1px solid #eee",
+                  borderRadius: "4px",
+                  textAlign: "left",
+                }}
+              >
+                <strong
+                  style={{
+                    fontSize: "12px",
+                    display: "block",
+                    marginBottom: "8px",
+                  }}
+                >
+                  Filtrar listagem por Tipo de Post:
+                </strong>
+                <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
+                  {opcoesTipo.map((tipo) => (
+                    <label
+                      key={tipo}
+                      style={{
+                        fontSize: "12px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={tiposSelecionados.includes(tipo)}
+                        onChange={() => {
+                          const novosTipos = tiposSelecionados.includes(tipo)
+                            ? tiposSelecionados.filter((t) => t !== tipo) // Remove se já estava
+                            : [...tiposSelecionados, tipo]; // Adiciona se não estava
+
+                          setTiposSelecionados(novosTipos);
+                          setPagina(1); // Volta para a primeira página ao filtrar
+                          carregarDados(1, busca, novosTipos); // Dispara a busca com os novos filtros
+                        }}
+                        style={{ marginRight: "5px" }}
+                      />
+                      {tipo}
+                    </label>
+                  ))}
                 </div>
               </section>
 

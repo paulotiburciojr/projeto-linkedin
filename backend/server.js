@@ -72,8 +72,17 @@ app.get("/api/documentos", async (req, res) => {
     // Também precisamos aplicar os filtros no banco agora,
     // já que não temos tudo em memória.
     const query = {};
-    if (req.query.campo_busca)
-      query.campo_busca = new RegExp(req.query.campo_busca, "i");
+    if (req.query.tipo_post) {
+      // O Axios/Express às vezes envia como string se for só um, ou array se forem vários
+      const tipos = Array.isArray(req.query.tipo_post)
+        ? req.query.tipo_post
+        : [req.query.tipo_post];
+      query.tipo_post = { $in: tipos };
+    }
+
+    if (req.query.campo_busca) {
+      query.titulo = new RegExp(req.query.campo_busca, "i");
+    }
     if (req.query.tipo_post) query.tipo_post = req.query.tipo_post;
     if (req.query.valido) query.valido = req.query.valido === "true";
 
