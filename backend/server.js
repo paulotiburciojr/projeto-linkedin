@@ -83,7 +83,6 @@ app.get("/api/documentos", async (req, res) => {
     if (req.query.campo_busca) {
       query.titulo = new RegExp(req.query.campo_busca, "i");
     }
-    if (req.query.tipo_post) query.tipo_post = req.query.tipo_post;
     if (req.query.valido) query.valido = req.query.valido === "true";
 
     const total = await Documento.countDocuments(query);

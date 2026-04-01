@@ -21,6 +21,7 @@ function App() {
           limit: 10,
           campo_busca: termoBusca,
           // Enviamos o array de tipos. O Axios transforma isso em tipo_post[]=in&tipo_post[]=posts
+          //tipo_post: tiposSelecionados,
           tipo_post: tiposSelecionados,
         },
       });
@@ -39,6 +40,7 @@ function App() {
 
   useEffect(() => {
     carregarDados(pagina, busca);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagina]);
 
   const handleBusca = (e) => {
@@ -86,33 +88,132 @@ function App() {
           onSubmit={handleBusca}
           style={{ marginTop: "5px", display: "flex", gap: "5px" }}
         >
-          <input
-            type="text"
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            placeholder="Buscar termo..."
+          <div
             style={{
-              fontSize: "12px",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              border: "none",
-              width: "250px",
-            }}
-          />
-          <button
-            type="submit"
-            style={{
-              fontSize: "12px",
-              padding: "4px 10px",
-              cursor: "pointer",
-              borderRadius: "4px",
-              border: "none",
-              backgroundColor: "#3498db",
-              color: "white",
+              display: "flex",
+              alignItems: "center",
+              gap: "20px",
+              backgroundColor: "#f4f7f6",
+              padding: "15px",
+              borderRadius: "8px",
+              marginBottom: "20px",
+              border: "1px solid #dfe6e9",
+              flexWrap: "wrap", // Garante que em telas menores os itens se ajustem
             }}
           >
-            Buscar
-          </button>
+            {/* LADO ESQUERDO: Busca por Palavra-Chave */}
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                flex: "1",
+                minWidth: "300px",
+              }}
+            >
+              <input
+                type="text"
+                placeholder="Pesquisar termo..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: "8px 12px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                  fontSize: "14px",
+                }}
+              />
+              <button
+                onClick={() => {
+                  setPagina(1);
+                  carregarDados(1, busca);
+                }}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#2c3e50",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Buscar
+              </button>
+            </div>
+
+            {/* LADO DIREITO: Checklist de Tipos (Múltipla Seleção) */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                paddingLeft: "20px",
+                borderLeft: "2px solid #ddd", // Uma divisória sutil
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  color: "#636e72",
+                }}
+              >
+                Tipos:
+              </span>
+              <div style={{ display: "flex", gap: "10px" }}>
+                {opcoesTipo.map((tipo) => (
+                  <label
+                    key={tipo}
+                    style={{
+                      fontSize: "12px",
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      backgroundColor: tiposSelecionados.includes(tipo)
+                        ? "#e1f5fe"
+                        : "transparent",
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      transition: "0.2s",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={tiposSelecionados.includes(tipo)}
+                      onChange={() => {
+                        const novosTipos = tiposSelecionados.includes(tipo)
+                          ? tiposSelecionados.filter((t) => t !== tipo)
+                          : [...tiposSelecionados, tipo];
+                        setTiposSelecionados(novosTipos);
+                      }}
+                      style={{ marginRight: "5px" }}
+                    />
+                    {tipo}
+                  </label>
+                ))}
+              </div>
+
+              {/* Botão para aplicar apenas os filtros de tipo se desejar */}
+              <button
+                onClick={() => {
+                  setPagina(1);
+                  carregarDados(1, busca);
+                }}
+                style={{
+                  padding: "4px 10px",
+                  backgroundColor: "#27ae60",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "11px",
+                }}
+              >
+                Filtrar
+              </button>
+            </div>
+          </div>
         </form>
       </header>
 
@@ -263,14 +364,51 @@ function App() {
                             : [...tiposSelecionados, tipo]; // Adiciona se não estava
 
                           setTiposSelecionados(novosTipos);
-                          setPagina(1); // Volta para a primeira página ao filtrar
-                          carregarDados(1, busca, novosTipos); // Dispara a busca com os novos filtros
+                          //setPagina(1); // Volta para a primeira página ao filtrar
                         }}
                         style={{ marginRight: "5px" }}
                       />
                       {tipo}
                     </label>
                   ))}
+                </div>
+                <div
+                  style={{
+                    marginTop: "12px",
+                    borderTop: "1px solid #eee",
+                    paddingTop: "10px",
+                  }}
+                >
+                  <button
+                    onClick={() => {
+                      setPagina(1);
+                      carregarDados(1, busca); // Agora ele usa o estado atual de tiposSelecionados
+                    }}
+                    style={{
+                      backgroundColor: "#2980b9", // Azul profissional
+                      color: "white",
+                      border: "none",
+                      padding: "6px 15px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Aplicar Filtros de Tipo
+                  </button>
+
+                  {tiposSelecionados.length > 0 && (
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        color: "#7f8c8d",
+                        marginLeft: "10px",
+                      }}
+                    >
+                      {tiposSelecionados.length} selecionado(s)
+                    </span>
+                  )}
                 </div>
               </section>
 
