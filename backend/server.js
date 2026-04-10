@@ -61,10 +61,10 @@ app.get("/api/teste", (req, res) => {
   res.json({ mensagem: "Hello World em formato JSON" });
 });
 
-// Rota para buscar todos os documentos
 app.get("/api/documentos", async (req, res) => {
   try {
-    // Pegamos a página e o limite da URL (ex: ?page=1&limit=10)
+    console.log("QUERY RECEBIDA: ", req.query);
+    // Pegamos a página e a limit da URL (ex: ?page=1&limit=10)
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -72,21 +72,34 @@ app.get("/api/documentos", async (req, res) => {
     // Também precisamos aplicar os filtros no banco agora,
     // já que não temos tudo em memória.
     const query = {};
+    
     if (req.query.tipo_post) {
       // O Axios/Express às vezes envia como string se for só um, ou array se forem vários
       const tipos = Array.isArray(req.query.tipo_post)
         ? req.query.tipo_post
         : [req.query.tipo_post];
-      query.tipo_post = { $in: tipos };
+        
+      if (tipos.length > 0) {
+        query.tipo_post = { $in: tipos };
+      }
     }
 
     if (req.query.campo_busca) {
-      query.titulo = new RegExp(req.query.campo_busca, "i");
+      // Otimização: Escapar caracteres especiais na string de busca para evitar erros de Regex
+      const termoEscapado = req.query.campo_busca.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      query.titulo = new RegExp(termoEscapado, "i");
     }
     if (req.query.valido) query.valido = req.query.valido === "true";
 
-    const total = await Documento.countDocuments(query);
-    const docs = await Documento.find(query).skip(skip).limit(limit).lean(); // .lean() para ser mais leve
+    // Otimização: Executar a contagem (countDocuments) e a busca (find) em paralelo
+    const [total, docs] = await Promise.all([
+      Documento.countDocuments(query),
+      Documento.find(query)
+        .sort({ _id: -1 }) // Otimização: Garantir estabilidade na paginação e trazer os mais novos primeiro
+        .skip(skip)
+        .limit(limit)
+        .lean() // .lean() retorna JS puro ao invés do Documento Mongoose inteiro
+    ]);
 
     res.json({
       total,
