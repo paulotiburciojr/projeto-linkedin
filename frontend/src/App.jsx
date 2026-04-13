@@ -303,13 +303,27 @@ function App() {
                     </a>
                   </div>
                   <div>
-                    <strong>ID do Banco:</strong>{" "}
-                    <span style={{ color: "#999" }}>{docSelecionado._id}</span>
+                    <strong>Período:</strong>{" "}
+                    <span style={{ color: "#999" }}>{docSelecionado.periodo}</span>
                   </div>
                   <div>
                     <strong>Tipo de postagem:</strong>{" "}
                     <span style={{ color: "#999" }}>
                       {docSelecionado.tipo_post}
+                    </span>
+                  </div>
+                  <div>
+                    <strong>Núm. de reações:</strong>{" "}
+                    <span style={{ color: "#999" }}>
+                      {docSelecionado.num_reacoes || "N/A"}
+                    </span>
+                  </div>
+                  <div>
+                    <strong>Data da execução:</strong>{" "}
+                    <span style={{ color: "#999" }}>
+                      {docSelecionado.data_execucao 
+                        ? new Date(docSelecionado.data_execucao).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) 
+                        : "N/A"}
                     </span>
                   </div>
                 </div>
@@ -318,45 +332,113 @@ function App() {
 
 
               {/* TEXTO PROCESSADO - Se você tiver um campo de texto limpo */}
-              {docSelecionado.texto_limpo && (
+              <section style={{ marginBottom: "20px" }}>
+                <h4 style={{ fontSize: "14px", color: "#555" }}>
+                  Texto Extraído (Para análise):
+                </h4>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    whiteSpace: "pre-wrap",
+                    backgroundColor: "#fff",
+                    padding: "15px",
+                    borderLeft: "4px solid #3498db",
+                    color: docSelecionado.texto_limpo ? "inherit" : "#999",
+                    fontStyle: docSelecionado.texto_limpo ? "normal" : "italic"
+                  }}
+                >
+                  {docSelecionado.texto_limpo || "Texto processado não disponível para este registro."}
+                </div>
+              </section>
+
+              {/* COMENTÁRIOS - Exibidos em um "acordeão" (detalhes/sumário HTML nativo) */}
+              {docSelecionado.comentarios && docSelecionado.comentarios.length > 0 && (
                 <section style={{ marginBottom: "20px" }}>
-                  <h4 style={{ fontSize: "14px", color: "#555" }}>
-                    Texto Extraído (Para análise):
-                  </h4>
-                  <div
+                  <details
                     style={{
-                      fontSize: "14px",
-                      whiteSpace: "pre-wrap",
-                      backgroundColor: "#fff",
-                      padding: "15px",
-                      borderLeft: "4px solid #3498db",
+                      backgroundColor: "#f8f9fa",
+                      border: "1px solid #e9ecef",
+                      borderRadius: "8px",
+                      padding: "10px",
                     }}
                   >
-                    {docSelecionado.texto_limpo}
-                  </div>
+                    <summary
+                      style={{
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                        fontSize: "14px",
+                        color: "#2c3e50",
+                        padding: "5px",
+                        outline: "none"
+                      }}
+                    >
+                      Comentários Extraídos ({docSelecionado.comentarios.length})
+                    </summary>
+                    <div style={{ marginTop: "15px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                      {docSelecionado.comentarios.map((comentario, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            padding: "12px",
+                            backgroundColor: "#fff",
+                            border: "1px solid #eee",
+                            borderLeft: "4px solid #2ecc71",
+                            borderRadius: "4px",
+                            fontSize: "13px",
+                            color: "#333",
+                            whiteSpace: "pre-wrap",
+                          }}
+                        >
+                          {comentario}
+                        </div>
+                      ))}
+                    </div>
+                  </details>
                 </section>
               )}
 
               {/* PÁGINA BRUTA - O "print" original do post */}
-              <section>
-                <h4 style={{ fontSize: "14px", color: "#555" }}>
-                  Visualização Original (HTML):
-                </h4>
-                <div
-                  style={{
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    padding: "10px",
-                    zoom: "0.8", // Diminui um pouco o tamanho do HTML original para caber melhor
-                  }}
-                >
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: docSelecionado.pagina_bruta,
+              {docSelecionado.pagina_bruta && (
+                <section>
+                  <details
+                    style={{
+                      backgroundColor: "#f8f9fa",
+                      border: "1px solid #e9ecef",
+                      borderRadius: "8px",
+                      padding: "10px",
                     }}
-                  />
-                </div>
-              </section>
+                  >
+                    <summary
+                      style={{
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                        fontSize: "14px",
+                        color: "#2c3e50",
+                        padding: "5px",
+                        outline: "none"
+                      }}
+                    >
+                      Visualização Original (HTML)
+                    </summary>
+                    <div
+                      style={{
+                        marginTop: "15px",
+                        border: "1px solid #ddd",
+                        borderRadius: "4px",
+                        padding: "10px",
+                        backgroundColor: "#fff",
+                        zoom: "0.8", // Diminui um pouco o tamanho do HTML original para caber melhor
+                      }}
+                    >
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: docSelecionado.pagina_bruta,
+                        }}
+                      />
+                    </div>
+                  </details>
+                </section>
+              )}
             </div>
           ) : (
             <div

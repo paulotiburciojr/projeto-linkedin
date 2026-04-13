@@ -45,6 +45,8 @@ const DocSchema = new mongoose.Schema(
     assunto: { type: String, default: "" },
     valido: { type: Boolean, default: true },
     texto_limpo: String,
+    comentarios: [String],
+    num_reacoes: String,
   },
   { collection: "dados_pesquisa_google" },
 );
@@ -63,7 +65,7 @@ app.get("/api/teste", (req, res) => {
 
 app.get("/api/documentos", async (req, res) => {
   try {
-    console.log("QUERY RECEBIDA: ", req.query);
+    //console.log("QUERY RECEBIDA: ", req.query);
     // Pegamos a página e a limit da URL (ex: ?page=1&limit=10)
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -71,7 +73,10 @@ app.get("/api/documentos", async (req, res) => {
 
     // Também precisamos aplicar os filtros no banco agora,
     // já que não temos tudo em memória.
-    const query = {};
+    const query = {
+      valido: { $ne: false },
+      excedente: { $ne: true }
+    };
     
     if (req.query.tipo_post) {
       // O Axios/Express às vezes envia como string se for só um, ou array se forem vários
@@ -89,13 +94,12 @@ app.get("/api/documentos", async (req, res) => {
       const termoEscapado = req.query.campo_busca.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
       query.titulo = new RegExp(termoEscapado, "i");
     }
-    if (req.query.valido) query.valido = req.query.valido === "true";
 
     // Otimização: Executar a contagem (countDocuments) e a busca (find) em paralelo
     const [total, docs] = await Promise.all([
       Documento.countDocuments(query),
       Documento.find(query)
-        .sort({ _id: -1 }) // Otimização: Garantir estabilidade na paginação e trazer os mais novos primeiro
+        .sort({ _id: 1 }) // Garante a ordem de inclusão no banco (mais antigos primeiro)
         .skip(skip)
         .limit(limit)
         .lean() // .lean() retorna JS puro ao invés do Documento Mongoose inteiro
