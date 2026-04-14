@@ -92,7 +92,7 @@ app.get("/api/documentos", async (req, res) => {
     if (req.query.campo_busca) {
       // Otimização: Escapar caracteres especiais na string de busca para evitar erros de Regex
       const termoEscapado = req.query.campo_busca.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-      query.titulo = new RegExp(termoEscapado, "i");
+      query.texto_limpo = new RegExp(termoEscapado, "i");
     }
 
     // Otimização: Executar a contagem (countDocuments) e a busca (find) em paralelo

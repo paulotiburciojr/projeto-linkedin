@@ -116,7 +116,7 @@ function App() {
             >
               <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1, minWidth: "200px" }}>
                 <span style={{ fontSize: "12px", fontWeight: "bold", color: "#636e72" }}>
-                  Palavra chave:
+                  Pesquisa:
                 </span>
                 <input
                   type="text"
